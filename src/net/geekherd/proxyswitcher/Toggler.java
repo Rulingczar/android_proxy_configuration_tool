@@ -16,9 +16,6 @@
 
 package net.geekherd.proxyswitcher;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -199,7 +196,7 @@ public class Toggler extends BroadcastReceiver
 		
 		
 		Log.d(Configuration.TAG, "Interface for " + android.os.Build.DEVICE + ": " + mInterface);
-
+		
 		if (mUseCustomProxy)
 		{
 			mHostname = mCustomProxy + ':' + mCustomProxyPort;
@@ -232,43 +229,12 @@ public class Toggler extends BroadcastReceiver
 	{
 		Log.d(Configuration.TAG, "Enabling proxy");
 		
-		Process process = null;
-	    try {
-			process = Runtime.getRuntime().exec("su 1000");
-			DataOutputStream os = new DataOutputStream(process.getOutputStream());
-			
-			os.writeBytes("sqlite3 /data/data/com.android.providers.settings/databases/settings.db " +
-					"\"INSERT OR IGNORE INTO secure (name, value) VALUES ('" + Settings.Secure.HTTP_PROXY + "', '" + mHostname + "');\"" + "\n");
-			os.flush();
-			
-			os.writeBytes("sqlite3 /data/data/com.android.providers.settings/databases/settings.db " +
-					"\"UPDATE secure SET value = '" + mHostname + "' WHERE name = '" + Settings.Secure.HTTP_PROXY + "';\"" + "\n");
-			os.flush();
-			
-			os.writeBytes("exit\n");
-		  	os.flush();
-		  	os.close();
-			process.waitFor();
-		} 
-	    catch (IOException e) 
-		{
-	    	Log.e(Configuration.TAG, "Error getting root access");
-			e.printStackTrace();
-			return;
+		if( ShellInterface.isSuAvailable()){
+			ShellInterface.runCommand(
+				"sqlite3 /data/data/com.android.providers.settings/databases/settings.db " + "\"INSERT OR IGNORE INTO secure (name, value) VALUES ('" + Settings.Secure.HTTP_PROXY + "', '" + mHostname + "');\"" + "\n"+
+				"sqlite3 /data/data/com.android.providers.settings/databases/settings.db " + "\"UPDATE secure SET value = '" + mHostname + "' WHERE name = '" + Settings.Secure.HTTP_PROXY + "';\""
+			);
 		}
-		catch (InterruptedException e)
-		{
-			Log.e(Configuration.TAG, "Error getting root access");
-			e.printStackTrace();
-			return;
-		}
-		catch (java.lang.RuntimeException e)
-		{
-			Log.e(Configuration.TAG, "Error getting root access");
-			e.printStackTrace();
-			return;
-		}
-		
 		context.sendBroadcast(new Intent(Proxy.PROXY_CHANGE_ACTION));
 	}
 	
@@ -278,44 +244,12 @@ public class Toggler extends BroadcastReceiver
 	private void disableProxy()
 	{
 		Log.d(Configuration.TAG, "Disabling proxy");
-		
-		Process process = null;
-	    try {
-			process = Runtime.getRuntime().exec("su 1000");
-			DataOutputStream os = new DataOutputStream(process.getOutputStream());
-			
-			os.writeBytes("sqlite3 /data/data/com.android.providers.settings/databases/settings.db " +
-					"\"INSERT OR IGNORE INTO secure (name, value) VALUES (" + Settings.Secure.HTTP_PROXY + ", '');\"" + "\n");
-			os.flush();
-			
-			os.writeBytes("sqlite3 /data/data/com.android.providers.settings/databases/settings.db " +
-					"\"UPDATE secure SET value = '' WHERE name = '" + Settings.Secure.HTTP_PROXY + "';\"" + "\n");
-			os.flush();
-			
-			os.writeBytes("exit\n");
-		  	os.flush();
-		  	os.close();
-			process.waitFor();
-		} 
-	    catch (IOException e) 
-		{
-	    	Log.e(Configuration.TAG, "Error getting root access");
-			e.printStackTrace();
-			return;
+		if( ShellInterface.isSuAvailable()){
+			ShellInterface.runCommand(
+				"sqlite3 /data/data/com.android.providers.settings/databases/settings.db " + "\"INSERT OR IGNORE INTO secure (name, value) VALUES (" + Settings.Secure.HTTP_PROXY + ", '');\"" + "\n"+
+				"sqlite3 /data/data/com.android.providers.settings/databases/settings.db " +"\"UPDATE secure SET value = '' WHERE name = '" + Settings.Secure.HTTP_PROXY + "';\""
+			);
 		}
-		catch (InterruptedException e)
-		{
-			Log.e(Configuration.TAG, "Error getting root access");
-			e.printStackTrace();
-			return;
-		}
-		catch (java.lang.RuntimeException e)
-		{
-			Log.e(Configuration.TAG, "Error getting root access");
-			e.printStackTrace();
-			return;
-		}
-		
 		context.sendBroadcast(new Intent(Proxy.PROXY_CHANGE_ACTION));
 	}
 	
@@ -329,58 +263,22 @@ public class Toggler extends BroadcastReceiver
 		
 		Log.d(Configuration.TAG, "Enabling U2NL");
 		
-		Process process = null;
-	    try {
-			process = Runtime.getRuntime().exec("su 1000");
-		} catch (IOException e) {
-			e.printStackTrace();
-			return;
+		if(ShellInterface.isSuAvailable()){
+			ShellInterface.runCommand(
+				"iptables -P INPUT ACCEPT \n"+
+				"iptables -P OUTPUT ACCEPT \n"+
+				"iptables -P FORWARD ACCEPT \n"+
+				"iptables -F \n"+
+				"iptables -t nat -F"+
+				"iptables -X \n"+
+				"iptables -t nat -F \n"+
+				"iptables -t nat -F \n"+
+				(mUseMMSU2NL ? ("iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 -d " + mMMS + " --dport " + mMMSPort + " -j DNAT --to-destination " + mMMS + ":" + mMMSPort) : "")+"\n"+
+				"iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 --dport 80 -j DNAT --to-destination " + mHostname + "\n"+
+				"iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 ! -d " + mProxy + " ! --dport " + mPort + " -j REDIRECT --to-port 1025\n"+
+				"u2nl " + mProxy + " " + mPort + " 127.0.0.1 1025 >/dev/null 2>&1 &"
+			);
 		}
-		catch (java.lang.RuntimeException e)
-		{
-			Log.e(Configuration.TAG, "Error getting root access");
-			e.printStackTrace();
-			return;
-		}
-		DataOutputStream os = new DataOutputStream(process.getOutputStream());
-		
-		try { os.writeBytes("iptables -P INPUT ACCEPT" + "\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		
-		try { os.writeBytes("iptables -P OUTPUT ACCEPT" + "\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		
-		try { os.writeBytes("iptables -P FORWARD ACCEPT" + "\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		
-		try { os.writeBytes("iptables -F" + "\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		
-		try { os.writeBytes("iptables -t nat -F" + "\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		
-		try { os.writeBytes("iptables -X" + "\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		
-		if (mUseMMSU2NL)
-		{
-			try { os.writeBytes("iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 -d " + mMMS + " --dport " + mMMSPort + " -j DNAT --to-destination " + mMMS + ":" + mMMSPort + "\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-			try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		}
-		
-		try { os.writeBytes("iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 --dport 80 -j DNAT --to-destination " + mHostname + "\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		
-		try { os.writeBytes("iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 ! -d " + mProxy + " ! --dport " + mPort + " -j REDIRECT --to-port 1025\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		
-		try { os.writeBytes("u2nl " + mProxy + " " + mPort + " 127.0.0.1 1025 >/dev/null 2>&1 &" + "\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		
-		try { os.writeBytes("exit\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { process.waitFor(); } catch (InterruptedException e) { Log.e(Configuration.TAG, "InterruptedException: " + e); e.printStackTrace(); }
-		
 	}
 	
 	/*
@@ -393,44 +291,17 @@ public class Toggler extends BroadcastReceiver
 		
 		Log.d(Configuration.TAG, "Disabling U2NL");
 		
-		Process process = null;
-	    try {
-			process = Runtime.getRuntime().exec("su 1000");
-		} catch (IOException e) {
-			e.printStackTrace();
-			return;
+		if(ShellInterface.isSuAvailable()){
+			ShellInterface.runCommand(
+				"killall u2nl"+"\n"+
+				"iptables -P INPUT ACCEPT"+"\n"+
+				"iptables -P OUTPUT ACCEPT"+"\n"+
+				"iptables -P FORWARD ACCEPT"+"\n"+
+				"iptables -F"+"\n"+
+				"iptables -t nat -F"+"\n"+
+				"iptables -X"
+			);
 		}
-		catch (java.lang.RuntimeException e)
-		{
-			Log.e(Configuration.TAG, "Error getting root access");
-			e.printStackTrace();
-			return;
-		}
-		DataOutputStream os = new DataOutputStream(process.getOutputStream());
-		
-		try { os.writeBytes("killall u2nl" + "\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		
-		try { os.writeBytes("iptables -P INPUT ACCEPT" + "\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		
-		try { os.writeBytes("iptables -P OUTPUT ACCEPT" + "\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		
-		try { os.writeBytes("iptables -P FORWARD ACCEPT" + "\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		
-		try { os.writeBytes("iptables -F" + "\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		
-		try { os.writeBytes("iptables -t nat -F" + "\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		
-		try { os.writeBytes("iptables -X" + "\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		
-		try { os.writeBytes("exit\n"); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { os.flush(); } catch (IOException e) { Log.e(Configuration.TAG, "IOException: " + e); e.printStackTrace(); }
-		try { process.waitFor(); } catch (InterruptedException e) { Log.e(Configuration.TAG, "InterruptedException: " + e); e.printStackTrace(); }
 	}
+	
 }

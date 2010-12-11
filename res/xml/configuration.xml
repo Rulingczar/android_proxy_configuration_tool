@@ -23,10 +23,17 @@
 			android:title="@string/proxy_status"
 			android:summary="@string/status_checking" />
 	
+		<PreferenceScreen
+			android:key="install_binaries"
+			android:title="Install Binaries"
+			android:summary="Install Required Binaries. u2nl and any others it depends on" />
+			
 	</PreferenceCategory>
 	
 	<PreferenceCategory android:title="@string/toggles" >
-	
+    
+
+      
 		<PreferenceScreen
 			android:key="toggle_activate"
 			android:title="@string/toggle_activate"
@@ -62,6 +69,13 @@
 			android:title="@string/prefs_use_u2nl"
 			android:summary="@string/prefs_use_u2nl_sry"
 			android:defaultValue="true" />
+			
+      	<CheckBoxPreference 
+			android:key="prefs_use_carrier_apn"
+			android:title="@string/prefs_use_carrier_apn"
+			android:summary="@string/prefs_use_carrier_apn"
+			android:dependency="prefs_use_mms_u2nl"
+			android:defaultValue="false" />
 			
 	</PreferenceCategory>
 	
