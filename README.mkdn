@@ -5,7 +5,14 @@ This Android app allows the phone to automatically switch proxy and u2nl binary 
 
 It is made and pre-configured to work with Android phones that have been flashed to MetroPCS and Cricket (at least voice and sms should be working already.)    
 
-
+THIS FORK:
+ Done by Gassan Idriss
+ Added option to install U2nl and Sqlite3
+ Added APN Settings installation, but only tested and working with HTC Eris on 2.1 Stock Root - Other models I have yet tested it with - still needs work
+ Added Automatic calculation of SPC for Password in APN Settings (Brought in MeidHelper from my MEID Calculator app)
+ Other stuff too.. gotta document better
+ 
+ For me this worked as installing an app and not as a rom, and works fine for the HTC Eris, although I could not get the market to work but all apps do
 TODO:
 ---------
 * BUG: Proxy actually not updating properly when setting it through the sqlite db.    
@@ -18,9 +25,9 @@ TODO:
 	* Automatically setup APN.
 	* Check build.prop and modify it if it's needed (backup too) (ask for restart if modified)
 	* Check /data/eri.xml and install the new one if it's needed (backup too) (ask for restart if installed)
-	* Check for u2nl binary, if not available install it in /system/bin/, it's in the assets folder. (ask for restart if installed)
-	* Check for sqlite3 binary, if not available install it in /system/xbin/, it's in the assets folder. (ask for restart if installed)
-	* Drop database tables and replace them with appropriate Carrier Settings in: /data/data/com.android.providers.telephony/databases/telephony.db    
+	DONE * Check for u2nl binary, if not available install it in /system/bin/, it's in the assets folder. (ask for restart if installed)
+	DONE * Check for sqlite3 binary, if not available install it in /system/xbin/, it's in the assets folder. (ask for restart if installed)
+	SOMEWHAT DONE* Drop database tables and replace them with appropriate Carrier Settings in: /data/data/com.android.providers.telephony/databases/telephony.db    
 	
 * Document, organize and maybe improve configuration screen.
 * Needs a better icon.    
@@ -41,3 +48,4 @@ Special thanks go out to Tracphonejunkie, whiterabittorg, To0 and Insaincain on 
 These guys were the ones that figured out and helped develop the method we are all using here to allow Android devices to work properly on MetroPCS and Cricket.    
 
 Enjoy.
+

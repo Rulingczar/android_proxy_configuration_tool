@@ -53,7 +53,7 @@ public class Configuration extends PreferenceActivity
 	public final static String TAG = "ProxySwitcher";
 	public final static String DEFAULT_METRO_PROXY = "10.223.2.4"; //MetroPCS Proxy Server (proxy.metropcs.com or wap.metropcs.com)
 	public final static String DEFAULT_METRO_PROXY_PORT = "3128"; // MetroPCS Proxy Server Port
-	public final static String DEFAULT_METRO_MMS = "10.223.2.4"; //MetroPCS Proxy Server (mms.metropcs.com) //TODO: update ip with correct one
+	public final static String DEFAULT_METRO_MMS = "65.91.116.37"; //MetroPCS Proxy Server (mms.metropcs.com)
 	public final static String DEFAULT_METRO_MMS_PORT = "3128"; // MetroPCS Proxy Server Port
 	
 	public final static String DEFAULT_CRICKET_PROXY = "10.132.25.254"; //Cricket Proxy Server
@@ -68,7 +68,7 @@ public class Configuration extends PreferenceActivity
 	public final static String DEFAULT_METRO_APN_APN = "internet"; 
 	public final static String DEFAULT_METRO_APN_USER = "%s@mymetropcs.com";  // TODO: replace %s with current programed phone number
 	public final static String DEFAULT_METRO_APN_SERVER = "wap.metropcs.net"; 
-	public final static String DEFAULT_METRO_APN_PASSWORD = "%s"; // TODO: use MEID calculation to determine proper password MEIDHelper class
+	public final static String DEFAULT_METRO_APN_PASSWORD = ""; // Password calculated from device MEID
 	public final static String DEFAULT_METRO_APN_PROXY = "wap.metropcs.net:3125"; 
 	public final static String DEFAULT_METRO_APN_PORT = "3128"; 
 	public final static String DEFAULT_METRO_APN_MMSPROXY = "wap.metropcs.net"; 
@@ -159,7 +159,6 @@ public class Configuration extends PreferenceActivity
 	
 	
 	private PreferenceScreen proxy_status;
-	private PreferenceScreen install_binaries;
 	private PreferenceScreen toggle_activate;
 	private PreferenceScreen toggle_deactivate;
 	
@@ -179,7 +178,9 @@ public class Configuration extends PreferenceActivity
 	private EditTextPreference prefs_custom_mms_port;
 	private CheckBoxPreference prefs_use_carrier_apn;
 	
-    @Override
+	private MeidHelper meidHelper;
+	
+	@Override
     public void onCreate(Bundle savedInstanceState) 
     {
     	requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
@@ -188,7 +189,6 @@ public class Configuration extends PreferenceActivity
         addPreferencesFromResource(R.xml.configuration);
         
         proxy_status = (PreferenceScreen)findPreference("proxy_status");
-        install_binaries = (PreferenceScreen)findPreference("install_binaries");
         
         toggle_activate = (PreferenceScreen)findPreference("toggle_activate");
         toggle_deactivate = (PreferenceScreen)findPreference("toggle_deactivate");
@@ -219,6 +219,8 @@ public class Configuration extends PreferenceActivity
         prefs_custom_mms.setOnPreferenceChangeListener(customMMSEditTextListener);
         prefs_custom_mms_port.setOnPreferenceChangeListener(customMMSPortEditTextListener);
         prefs_use_carrier_apn.setOnPreferenceChangeListener(customAPNCheckboxListener);
+        
+       
     }
     
     private BroadcastReceiver mProxyChangeActionReceiver = new BroadcastReceiver()
@@ -306,6 +308,7 @@ public class Configuration extends PreferenceActivity
     	}
     	else if (INSTALL_BINARIES.equals(key))
     	{
+    		 setProgressBarIndeterminateVisibility(true);
 	   		 Intent installer = new Intent(this, InstallBinaries.class);
 	         startActivityForResult(installer, 0);
     	}
@@ -429,12 +432,11 @@ public class Configuration extends PreferenceActivity
 		}
     	return state;
     }
+    
 	/*
 	 * Update the Preference summary with the used APN Settings
 	 */
     private void updateCustomAPNSummary(Object value, String carrier){
-    	/* TODO */
-    	Log.d(TAG, "To be Implimented");
     	if (value.equals(true)){
     		backupAndInstallAPN();
     	} else {
@@ -750,29 +752,70 @@ public class Configuration extends PreferenceActivity
     	Log.d(TAG, "Backing up and Installing APN");   
 
         if(ShellInterface.isSuAvailable()){
-        	// Get Device Serial and Find SPC for Password
-        	Log.d(TAG, ShellInterface.getProcessOutput(
-        		"cp /data/data/com.android.providers.telephony/databases/telephony.db /data/data/com.android.providers.telephony/databases/telephony.db.bak \n"+
-        		"sqlite3 /data/data/com.android.providers.telephony/databases/telephony.db " + "\"DELETE FROM carriers;\"" + "\n"+
-        		"sqlite3 /data/data/com.android.providers.telephony/databases/telephony.db " + "\"INSERT INTO carriers (_id,name,numeric,mcc,mnc,apn,user,server,password,proxy,port,mmsproxy,mmsport,mmsc,authtype,type,current)VALUES(1," +
-        		  "'"+DEFAULT_METRO_APN_NAME+"',"+
-        		  "'"+DEFAULT_METRO_APN_NUMERIC+"',"+
-        		  "'"+DEFAULT_METRO_APN_MCC+"',"+
-        		  "'"+DEFAULT_METRO_APN_MNC+"',"+
-        		  "'"+DEFAULT_METRO_APN_APN+"',"+
-        		  "'"+DEFAULT_METRO_APN_USER+"',"+
-        		  "'"+DEFAULT_METRO_APN_SERVER+"',"+
-        		  "'"+DEFAULT_METRO_APN_PASSWORD+"',"+
-        		  "'"+DEFAULT_METRO_APN_PROXY+"',"+
-        		  "'"+DEFAULT_METRO_APN_PORT+"',"+
-        		  "'"+DEFAULT_METRO_APN_MMSPROXY+"',"+
-        		  "'"+DEFAULT_METRO_APN_MMSPORT+"',"+
-        		  "'"+DEFAULT_METRO_APN_MMSC+"',"+
-        		  "'"+DEFAULT_METRO_APN_AUTHTYPE+"',"+
-        		  "'"+DEFAULT_METRO_APN_TYPE+"',"+
-        		  "'1'"+
-        		");\""
-        	));
+        	
+        	
+
+        	if(prefs_carrier_selection.getValue().equals("metropcs")){
+        		// Get Device Serial and Find SPC for Password
+        		try{
+            		String deviceSerial = getDeviceSerial();
+            		if(deviceSerial == null){
+            			Toast.makeText(getApplicationContext(), "Device Not CDMA", Toast.LENGTH_LONG);
+            			return;
+            		}
+            		meidHelper = new MeidHelper(deviceSerial);
+            	}catch(Exception e){
+            		Log.e(TAG, "Error Getting Device Serial");
+            	}
+            	
+            	 // HTC Eris
+        		if(android.os.Build.DEVICE.equals("desirec")){
+        			Log.d(TAG, ShellInterface.getProcessOutput(
+        				"sqlite3 /data/data/com.android.providers.telephony/databases/telephony.db " + "\"UPDATE carriers SET numeric='310012',mnc='012',mcc='310';\"\n"+
+        				"sqlite3 /data/data/com.android.providers.telephony/databases/telephony.db " + "\"UPDATE carriers SET name='metropcs'," +
+        					"user = '"+getDeviceMDN()+"@mymetropcs.com"+"'," +
+        					"server = '"+DEFAULT_METRO_APN_SERVER+"'," +
+        					"password = '"+meidHelper.getMetroSpc()+"'," +
+        					"proxy = 'wap.metropcs.net'," +
+        					"port = '"+DEFAULT_METRO_APN_PORT+"'," +
+        					"mmsproxy = '"+DEFAULT_METRO_APN_MMSPROXY+"'," +
+        					"mmsport = '"+DEFAULT_METRO_APN_MMSPORT+"'," +
+        					"mmsc = '"+DEFAULT_METRO_APN_MMSC+"', " +
+        					"apn = 'internet'"+
+        					"WHERE name = 'Production';\""
+        			));
+        		
+        		// ALL OTHERS
+        		} else { 
+                	Log.d(TAG, ShellInterface.getProcessOutput(
+                    		"cp /data/data/com.android.providers.telephony/databases/telephony.db /data/data/com.android.providers.telephony/databases/telephony.db.bak \n"+
+                    		"sqlite3 /data/data/com.android.providers.telephony/databases/telephony.db " + "\"DELETE FROM carriers;\"" + "\n"+
+                    		"sqlite3 /data/data/com.android.providers.telephony/databases/telephony.db " + "\"INSERT INTO carriers (_id,name,numeric,mcc,mnc,apn,user,server,password,proxy,port,mmsproxy,mmsport,mmsc,authtype,type,current)VALUES(1," +
+                    		  "'"+DEFAULT_METRO_APN_NAME+"',"+
+                    		  "'"+DEFAULT_METRO_APN_NUMERIC+"',"+
+                    		  "'"+DEFAULT_METRO_APN_MCC+"',"+
+                    		  "'"+DEFAULT_METRO_APN_MNC+"',"+
+                    		  "'"+DEFAULT_METRO_APN_APN+"',"+
+                    		  "'"+getDeviceMDN()+"@mymetropcs.com"+"',"+
+                    		  "'"+DEFAULT_METRO_APN_SERVER+"',"+
+                    		  "'"+meidHelper.getMetroSpc()+"',"+
+                    		  "'"+DEFAULT_METRO_APN_PROXY+"',"+
+                    		  "'"+DEFAULT_METRO_APN_PORT+"',"+
+                    		  "'"+DEFAULT_METRO_APN_MMSPROXY+"',"+
+                    		  "'"+DEFAULT_METRO_APN_MMSPORT+"',"+
+                    		  "'"+DEFAULT_METRO_APN_MMSC+"',"+
+                    		  "'"+DEFAULT_METRO_APN_AUTHTYPE+"',"+
+                    		  "'"+DEFAULT_METRO_APN_TYPE+"',"+
+                    		  "'1'"+
+                    		");\"\n"+
+                    		"chmod 777 /data/data/com.android.providers.telephony/databases/telephony.db"
+                    	));
+        		}
+
+        	} else if(prefs_carrier_selection.getValue().equals("cricket")){
+        		
+        	}
+
         }
     }
     /* 
@@ -782,7 +825,8 @@ public class Configuration extends PreferenceActivity
     	Log.d(TAG, "Backing up and Installing APN");    	
         if(ShellInterface.isSuAvailable()){
         	Log.d(TAG, ShellInterface.getProcessOutput(
-        		"mv /data/data/com.android.providers.telephony/databases/telephony.db.bak /data/data/com.android.providers.telephony/databases/telephony.db"
+        		"mv /data/data/com.android.providers.telephony/databases/telephony.db.bak /data/data/com.android.providers.telephony/databases/telephony.db"+
+        		"chmod 777 /data/data/com.android.providers.telephony/databases/telephony.db"
         	));
         }
     }
@@ -790,7 +834,18 @@ public class Configuration extends PreferenceActivity
      * Get the Device Serial Number
      */
     private String getDeviceSerial(){
-    	TelephonyManager tManager = (TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE);
-    	return tManager.getDeviceId();
+    	TelephonyManager telephone = (TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE);
+    	if( telephone.getNetworkType() == telephone.PHONE_TYPE_GSM){ // exit for GSM 
+    		Log.e(TAG, "Phone is not CDMA");
+    		return null;
+    	}
+    	return telephone.getDeviceId();
+    }
+    /*
+     * Get the Device Serial MDN
+     */
+    private String getDeviceMDN(){
+    	TelephonyManager telephone = (TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE);
+    	return telephone.getLine1Number();
     }
 }

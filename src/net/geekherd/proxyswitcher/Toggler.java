@@ -70,7 +70,9 @@ public class Toggler extends BroadcastReceiver
 			
 			try 
 			{
-				enableProxy();
+				if( ! mUseU2NL ){ // only if we done use u2nl
+					enableProxy();
+				}
 				enableU2NL();
 			} catch (Exception e) {
 				Log.e(Configuration.TAG, "", e);
@@ -175,7 +177,7 @@ public class Toggler extends BroadcastReceiver
 		mUseU2NL = preferences.getBoolean(Configuration.PREF_USE_U2NL, 
 				Configuration.PREF_USE_U2NL_DEFAULT);
 		
-		
+		/* TODO: Add support for cricket */
 		if (android.os.Build.DEVICE.equals("sholes"))
 		{
 			//The Motorola Droid's kernel was slightly changed between 
@@ -227,15 +229,15 @@ public class Toggler extends BroadcastReceiver
 	 */
 	private void enableProxy()
 	{
-		Log.d(Configuration.TAG, "Enabling proxy");
 		
-		if( ShellInterface.isSuAvailable()){
+		if( !mUseU2NL && ShellInterface.isSuAvailable()){
+			Log.d(Configuration.TAG, "Enabling proxy");
 			ShellInterface.runCommand(
 				"sqlite3 /data/data/com.android.providers.settings/databases/settings.db " + "\"INSERT OR IGNORE INTO secure (name, value) VALUES ('" + Settings.Secure.HTTP_PROXY + "', '" + mHostname + "');\"" + "\n"+
 				"sqlite3 /data/data/com.android.providers.settings/databases/settings.db " + "\"UPDATE secure SET value = '" + mHostname + "' WHERE name = '" + Settings.Secure.HTTP_PROXY + "';\""
 			);
+			context.sendBroadcast(new Intent(Proxy.PROXY_CHANGE_ACTION));
 		}
-		context.sendBroadcast(new Intent(Proxy.PROXY_CHANGE_ACTION));
 	}
 	
 	/*
@@ -246,7 +248,6 @@ public class Toggler extends BroadcastReceiver
 		Log.d(Configuration.TAG, "Disabling proxy");
 		if( ShellInterface.isSuAvailable()){
 			ShellInterface.runCommand(
-				"sqlite3 /data/data/com.android.providers.settings/databases/settings.db " + "\"INSERT OR IGNORE INTO secure (name, value) VALUES (" + Settings.Secure.HTTP_PROXY + ", '');\"" + "\n"+
 				"sqlite3 /data/data/com.android.providers.settings/databases/settings.db " +"\"UPDATE secure SET value = '' WHERE name = '" + Settings.Secure.HTTP_PROXY + "';\""
 			);
 		}
@@ -264,20 +265,32 @@ public class Toggler extends BroadcastReceiver
 		Log.d(Configuration.TAG, "Enabling U2NL");
 		
 		if(ShellInterface.isSuAvailable()){
-			ShellInterface.runCommand(
-				"iptables -P INPUT ACCEPT \n"+
-				"iptables -P OUTPUT ACCEPT \n"+
-				"iptables -P FORWARD ACCEPT \n"+
-				"iptables -F \n"+
-				"iptables -t nat -F"+
-				"iptables -X \n"+
-				"iptables -t nat -F \n"+
-				"iptables -t nat -F \n"+
-				(mUseMMSU2NL ? ("iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 -d " + mMMS + " --dport " + mMMSPort + " -j DNAT --to-destination " + mMMS + ":" + mMMSPort) : "")+"\n"+
-				"iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 --dport 80 -j DNAT --to-destination " + mHostname + "\n"+
-				"iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 ! -d " + mProxy + " ! --dport " + mPort + " -j REDIRECT --to-port 1025\n"+
-				"u2nl " + mProxy + " " + mPort + " 127.0.0.1 1025 >/dev/null 2>&1 &"
-			);
+			if(android.os.Build.DEVICE.equals("desirec")){ // HTC ERIS
+				ShellInterface.runCommand(
+					"iptables -P INPUT ACCEPT \n"+
+					"iptables -P OUTPUT ACCEPT \n"+
+					"iptables -P FORWARD ACCEPT \n"+
+					"iptables -F \n"+
+					"iptables -t nat -F \n"+
+					"iptables -X \n"+
+					(mUseMMSU2NL ? ("iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 -d " + mMMS + " --dport " + mMMSPort + " -j DNAT --to-destination " + mMMS + ":" + mMMSPort) : "")+"\n"+
+					"iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 ! -d 10.223.2.4 -j REDIRECT --to-port 1025 \n"+
+					"u2nl " + mProxy + " " + mPort + " 127.0.0.1 1025 >/dev/null 2>&1 &"
+					);
+			} else {
+				ShellInterface.runCommand(
+					"iptables -P INPUT ACCEPT \n"+
+					"iptables -P OUTPUT ACCEPT \n"+
+					"iptables -P FORWARD ACCEPT \n"+
+					"iptables -F \n"+
+					"iptables -t nat -F \n"+
+					"iptables -X \n"+
+					(mUseMMSU2NL ? ("iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 -d " + mMMS + " --dport " + mMMSPort + " -j DNAT --to-destination " + mMMS + ":" + mMMSPort) : "")+"\n"+
+					"iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 --dport 80 -j DNAT --to-destination " + mHostname + "\n"+
+					"iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 ! -d " + mProxy + " ! --dport " + mPort + " -j REDIRECT --to-port 1025\n"+
+					"u2nl " + mProxy + " " + mPort + " 127.0.0.1 1025 >/dev/null 2>&1 &"
+				);
+			}
 		}
 	}
 	
