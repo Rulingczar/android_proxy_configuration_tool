@@ -12,7 +12,7 @@ THIS FORK:
  Added Automatic calculation of SPC for Password in APN Settings (Brought in MeidHelper from my MEID Calculator app)
  Moved settings to SQLite Database.
  
- For me this worked as installing an app and not as a rom, and works fine for the HTC Eris, although I could not get the market to work but all apps do
+ For me this worked as installing an app and not as a rom
 TODO:
 ---------
 * BUG: Proxy actually not updating properly when setting it through the sqlite db.    
