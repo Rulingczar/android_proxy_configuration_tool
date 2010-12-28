@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Proxy;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.Preference;
@@ -23,7 +22,7 @@ public class InstallBinaries extends PreferenceActivity{
 	
 	public final static String INSTALL_U2NL = "install_u2nl";
 	public final static String INSTALL_SQLITE3 = "install_sqlite3";
-	
+
 	public boolean sdAvailable = false;
 	boolean sdWritable = false;
 	
@@ -31,7 +30,7 @@ public class InstallBinaries extends PreferenceActivity{
 		
 	private String systemMount;
 	
-	private PreferenceScreen install_u2nl,install_sqlite3;
+	private PreferenceScreen install_u2nl,install_sqlite3,install_iptables;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) 
@@ -39,10 +38,11 @@ public class InstallBinaries extends PreferenceActivity{
     	requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
     	super.onCreate(savedInstanceState);
     	setProgressBarIndeterminateVisibility(true);
-        addPreferencesFromResource(R.xml.configuration_binaries);
+        addPreferencesFromResource(R.xml.install_binaries);
         
         install_u2nl = (PreferenceScreen)findPreference("install_u2nl");
         install_sqlite3 = (PreferenceScreen)findPreference("install_sqlite3");
+        install_iptables = (PreferenceScreen)findPreference("install_iptables");
         
         systemMount = findSystemMount();
                 
@@ -67,8 +67,7 @@ public class InstallBinaries extends PreferenceActivity{
 		
 		new checkStatus().execute();
 		
-		this.registerReceiver(this.mBinaryChangeActionReceiver, 
-					new IntentFilter(Proxy.PROXY_CHANGE_ACTION));
+		this.registerReceiver(this.mBinaryChangeActionReceiver, new IntentFilter());
 	}
     
     @Override
@@ -113,7 +112,7 @@ public class InstallBinaries extends PreferenceActivity{
      */
     protected boolean u2nlExists(){
         if(ShellInterface.isSuAvailable()){
-        	if(ShellInterface.getProcessOutput("ls /system/bin | grep u2nl").length() > 0)
+        	if(ShellInterface.getProcessOutput("ls /system/bin | busybox grep u2nl").length() > 0)
         	{
         		return true;
         	}
@@ -179,20 +178,19 @@ public class InstallBinaries extends PreferenceActivity{
         	);
     	}
     }
-    
+ 
     /*
      * Check to see if sqlite3 binary already exists in /system/xbin 
      */
     protected boolean sqlite3Exists(){
         if(ShellInterface.isSuAvailable()){
-        	if(ShellInterface.getProcessOutput("ls /system/xbin | grep sqlite3").length() > 0)
+        	if(ShellInterface.getProcessOutput("ls /system/xbin | busybox grep sqlite3").length() > 0)
         	{
         		return true;
         	}
         }
         return false;
     }
-    
     
     /*
      * Locate the System mount to be able to write to it
@@ -206,7 +204,7 @@ public class InstallBinaries extends PreferenceActivity{
     	if(ShellInterface.isSuAvailable()) { 
     		int b=0;
     		for(b=0;b<=6;b++){
-            	if(ShellInterface.getProcessOutput("mount | grep '/dev/block/mtdblock"+b+" on /system'").length() > 0){
+            	if(ShellInterface.getProcessOutput("mount | busybox grep '/dev/block/mtdblock"+b+" on /system'").length() > 0){
             		return Integer.toString(b);
             	}
     		}
@@ -265,18 +263,21 @@ public class InstallBinaries extends PreferenceActivity{
     {
     	install_u2nl.setEnabled(false);
     	install_sqlite3.setEnabled(false);
+
     }
 	
 	protected void enableToggles()
     {
     	install_u2nl.setEnabled(true);
     	install_sqlite3.setEnabled(true);
+
     }
 	
     private class checkStatus extends AsyncTask<Void, Void, Boolean> 
 	{
     	boolean u2nlStatus = false;
     	boolean sqlite3Status = false;
+
     	
     	protected void onPreExecute()
     	{
@@ -297,7 +298,8 @@ public class InstallBinaries extends PreferenceActivity{
 
     		u2nlStatus = u2nlExists();
     		sqlite3Status = sqlite3Exists();
-            
+
+    		
 			return true;
 		}
     	
@@ -307,10 +309,11 @@ public class InstallBinaries extends PreferenceActivity{
         	install_u2nl.setTitle((u2nlStatus ? "Uninstall" : "Install")+" u2nl");
         	install_u2nl.setSummary((u2nlStatus ? "Uninstall" : "Install")+" the u2nl binary");
         	
+        	
         	install_sqlite3.setTitle((sqlite3Status ? "Uninstall" : "Install")+" sqlite3");
         	install_sqlite3.setSummary((sqlite3Status ? "Uninstall" : "Install")+" the sqlite3 binary");
         	
-    		enableToggles();
+        	enableToggles();
     	}
 	}
     

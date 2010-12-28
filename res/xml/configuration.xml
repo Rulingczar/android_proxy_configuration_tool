@@ -23,17 +23,17 @@
 			android:title="@string/proxy_status"
 			android:summary="@string/status_checking" />
 	
-		<PreferenceScreen
-			android:key="install_binaries"
-			android:title="Install Binaries"
-			android:summary="Install Required Binaries. u2nl and any others it depends on" />
 			
 	</PreferenceCategory>
 	
 	<PreferenceCategory android:title="@string/toggles" >
     
 
-      
+		<PreferenceScreen
+			android:key="install_binaries"
+			android:title="@string/install_binaries"
+			android:summary="@string/install_binaries_sry" />
+			
 		<PreferenceScreen
 			android:key="toggle_activate"
 			android:title="@string/toggle_activate"
@@ -46,6 +46,12 @@
 			android:summary="@string/toggle_deactivate_sry"
 			android:enabled="false" />
 	
+      	<PreferenceScreen 
+			android:key="toggle_carrier_apn"
+			android:title="@string/toggle_carrier_apn_inactive"
+			android:summary="@string/toggle_carrier_apn_inactive_sry"
+			android:enabled="false" />
+			
 	</PreferenceCategory>
 	
 	<PreferenceCategory android:title="@string/configuration" >
@@ -58,6 +64,58 @@
  			android:entryValues="@array/prefs_carrier_selection_values"
  			android:defaultValue="metropcs" />
 		
+	<PreferenceScreen
+		android:key="prefs_custom_settings" 
+		android:title="@string/custom_settings"
+		android:summary="@string/prefs_use_custom_proxy_sry" >
+
+			
+		<EditTextPreference 
+			android:key="prefs_custom_proxy"
+			android:title="@string/prefs_custom_proxy"
+			android:summary="@string/prefs_custom_proxy_sryOff"
+			android:defaultValue=""
+			android:lines="1"
+      		android:maxLines="1"
+      		android:maxLength="15"
+      		android:digits="0123456789."
+      		android:inputType="phone" />
+      		
+      	<EditTextPreference 
+			android:key="prefs_custom_proxy_port"
+			android:title="@string/prefs_custom_proxy_port"
+			android:summary="@string/prefs_custom_proxy_port_sryOff"
+			android:defaultValue=""
+			android:lines="1"
+      		android:maxLines="1"
+      		android:maxLength="5"
+      		android:digits="0123456789"
+      		android:inputType="phone" />
+			
+		<EditTextPreference 
+			android:key="prefs_custom_mms"
+			android:title="@string/prefs_custom_mms"
+			android:summary="@string/prefs_custom_mms_sryOff"
+			android:defaultValue=""
+			android:lines="1"
+      		android:maxLines="1"
+      		android:maxLength="15"
+      		android:digits="0123456789."
+      		android:inputType="phone" />
+      		
+      	<EditTextPreference 
+			android:key="prefs_custom_mms_port"
+			android:title="@string/prefs_custom_mms_port"
+			android:summary="@string/prefs_custom_mms_port_sryOff"
+			android:defaultValue=""
+			android:lines="1"
+      		android:maxLines="1"
+      		android:maxLength="5"
+      		android:digits="0123456789"
+      		android:inputType="phone" />
+	
+	</PreferenceScreen>
+	
 		<CheckBoxPreference 
 			android:key="prefs_autoswitch_enabled"
 			android:title="@string/prefs_autoswitch_enabled"
@@ -71,87 +129,15 @@
 			android:defaultValue="true" />
 			
       	<CheckBoxPreference 
-			android:key="prefs_use_carrier_apn"
-			android:title="@string/prefs_use_carrier_apn"
-			android:summary="@string/prefs_use_carrier_apn"
-			android:dependency="prefs_use_mms_u2nl"
-			android:defaultValue="false" />
-			
-	</PreferenceCategory>
-	
-	<PreferenceScreen
-		android:key="prefs_custom_settings" 
-		android:title="@string/custom_settings"
-		android:summary="@string/prefs_use_custom_proxy_sry" >
-			
-		<CheckBoxPreference 
-			android:key="prefs_use_custom_proxy"
-			android:title="@string/prefs_use_custom_proxy"
-			android:summary="@string/prefs_use_custom_proxy_sry"
-			android:defaultValue="false" />
-			
-		<EditTextPreference 
-			android:key="prefs_custom_proxy"
-			android:title="@string/prefs_custom_proxy"
-			android:summary="@string/prefs_custom_proxy_sryOff"
-			android:dependency="prefs_use_custom_proxy"
-			android:defaultValue=""
-			android:lines="1"
-      		android:maxLines="1"
-      		android:maxLength="15"
-      		android:digits="0123456789."
-      		android:inputType="phone" />
-      		
-      	<EditTextPreference 
-			android:key="prefs_custom_proxy_port"
-			android:title="@string/prefs_custom_proxy_port"
-			android:summary="@string/prefs_custom_proxy_port_sryOff"
-			android:dependency="prefs_use_custom_proxy"
-			android:defaultValue=""
-			android:lines="1"
-      		android:maxLines="1"
-      		android:maxLength="5"
-      		android:digits="0123456789"
-      		android:inputType="phone" />
-      		
-      	<CheckBoxPreference 
 			android:key="prefs_use_mms_u2nl"
 			android:title="@string/prefs_use_mms_u2nl"
 			android:summary="@string/prefs_use_mms_u2nl_sry"
 			android:defaultValue="true" />
-      		
-      	<CheckBoxPreference 
-			android:key="prefs_use_custom_mms"
-			android:title="@string/prefs_use_custom_mms"
-			android:summary="@string/prefs_use_custom_mms_sry"
-			android:dependency="prefs_use_mms_u2nl"
-			android:defaultValue="false" />
 			
-		<EditTextPreference 
-			android:key="prefs_custom_mms"
-			android:title="@string/prefs_custom_mms"
-			android:summary="@string/prefs_custom_mms_sryOff"
-			android:dependency="prefs_use_custom_mms"
-			android:defaultValue=""
-			android:lines="1"
-      		android:maxLines="1"
-      		android:maxLength="15"
-      		android:digits="0123456789."
-      		android:inputType="phone" />
-      		
-      	<EditTextPreference 
-			android:key="prefs_custom_mms_port"
-			android:title="@string/prefs_custom_mms_port"
-			android:summary="@string/prefs_custom_mms_port_sryOff"
-			android:dependency="prefs_use_custom_mms"
-			android:defaultValue=""
-			android:lines="1"
-      		android:maxLines="1"
-      		android:maxLength="5"
-      		android:digits="0123456789"
-      		android:inputType="phone" />
+			
+	</PreferenceCategory>
 	
-	</PreferenceScreen>
+	
 	
 	<PreferenceCategory android:title="@string/credits" >
 	

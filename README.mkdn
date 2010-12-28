@@ -6,11 +6,11 @@ This Android app allows the phone to automatically switch proxy and u2nl binary 
 It is made and pre-configured to work with Android phones that have been flashed to MetroPCS and Cricket (at least voice and sms should be working already.)    
 
 THIS FORK:
- Done by Gassan Idriss
+ Additions by Gassan Idriss
  Added option to install U2nl and Sqlite3
- Added APN Settings installation, but only tested and working with HTC Eris on 2.1 Stock Root - Other models I have yet tested it with - still needs work
+ Added APN Settings installation. Tested and working on HTC Eris (stock Rooted Rom), Motorola Droid, HTC Incredible - and will probably work on any phone with Cyanogen mod.
  Added Automatic calculation of SPC for Password in APN Settings (Brought in MeidHelper from my MEID Calculator app)
- Other stuff too.. gotta document better
+ Moved settings to SQLite Database.
  
  For me this worked as installing an app and not as a rom, and works fine for the HTC Eris, although I could not get the market to work but all apps do
 TODO:
@@ -48,4 +48,3 @@ Special thanks go out to Tracphonejunkie, whiterabittorg, To0 and Insaincain on 
 These guys were the ones that figured out and helped develop the method we are all using here to allow Android devices to work properly on MetroPCS and Cricket.    
 
 Enjoy.
-

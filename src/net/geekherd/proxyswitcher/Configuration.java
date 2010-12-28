@@ -16,6 +16,7 @@
 
 package net.geekherd.proxyswitcher;
 
+
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -35,7 +36,6 @@ import android.provider.Settings;
 import android.util.Log;
 import android.view.Window;
 import android.widget.Toast;
-import android.telephony.TelephonyManager;
 
 public class Configuration extends PreferenceActivity 
 {
@@ -51,48 +51,6 @@ public class Configuration extends PreferenceActivity
 	
 	/** Default Settings **/
 	public final static String TAG = "ProxySwitcher";
-	public final static String DEFAULT_METRO_PROXY = "10.223.2.4"; //MetroPCS Proxy Server (proxy.metropcs.com or wap.metropcs.com)
-	public final static String DEFAULT_METRO_PROXY_PORT = "3128"; // MetroPCS Proxy Server Port
-	public final static String DEFAULT_METRO_MMS = "65.91.116.37"; //MetroPCS Proxy Server (mms.metropcs.com)
-	public final static String DEFAULT_METRO_MMS_PORT = "3128"; // MetroPCS Proxy Server Port
-	
-	public final static String DEFAULT_CRICKET_PROXY = "10.132.25.254"; //Cricket Proxy Server
-	public final static String DEFAULT_CRICKET_PROXY_PORT = "8080"; // Cricket Proxy Server Port
-	public final static String DEFAULT_CRICKET_MMS = "10.132.25.254"; //Cricket Proxy Server //TODO: update ip with correct one
-	public final static String DEFAULT_CRICKET_MMS_PORT = "8080"; // Cricket Proxy Server Port
-	
-	public final static String DEFAULT_METRO_APN_NAME = "MetroPCS"; 
-	public final static String DEFAULT_METRO_APN_NUMERIC = "1"; 
-	public final static String DEFAULT_METRO_APN_MCC = "310"; 
-	public final static String DEFAULT_METRO_APN_MNC = "004"; 
-	public final static String DEFAULT_METRO_APN_APN = "internet"; 
-	public final static String DEFAULT_METRO_APN_USER = "%s@mymetropcs.com";  // TODO: replace %s with current programed phone number
-	public final static String DEFAULT_METRO_APN_SERVER = "wap.metropcs.net"; 
-	public final static String DEFAULT_METRO_APN_PASSWORD = ""; // Password calculated from device MEID
-	public final static String DEFAULT_METRO_APN_PROXY = "wap.metropcs.net:3125"; 
-	public final static String DEFAULT_METRO_APN_PORT = "3128"; 
-	public final static String DEFAULT_METRO_APN_MMSPROXY = "wap.metropcs.net"; 
-	public final static String DEFAULT_METRO_APN_MMSPORT = "3128"; 
-	public final static String DEFAULT_METRO_APN_MMSC = "http://mms.metropcs.net:3128/mmsc"; 
-	public final static String DEFAULT_METRO_APN_AUTHTYPE = ""; 
-	public final static String DEFAULT_METRO_APN_TYPE = "";
-
-	/* TODO: ADD CRICKET SETTINGS */
-	public final static String DEFAULT_CRICKET_APN_NAME = "Cricket"; 
-	public final static String DEFAULT_CRICKET_APN_NUMERIC = ""; 
-	public final static String DEFAULT_CRICKET_APN_MCC = ""; 
-	public final static String DEFAULT_CRICKET_APN_MNC = ""; 
-	public final static String DEFAULT_CRICKET_APN_APN = ""; 
-	public final static String DEFAULT_CRICKET_APN_USER = ""; 
-	public final static String DEFAULT_CRICKET_APN_SERVER = ""; 
-	public final static String DEFAULT_CRICKET_APN_PASSWORD = ""; 
-	public final static String DEFAULT_CRICKET_APN_PROXY = ""; 
-	public final static String DEFAULT_CRICKET_APN_PORT = ""; 
-	public final static String DEFAULT_CRICKET_APN_MMSPROXY = ""; 
-	public final static String DEFAULT_CRICKET_APN_MMSPORT = ""; 
-	public final static String DEFAULT_CRICKET_APN_MMSC = ""; 
-	public final static String DEFAULT_CRICKET_APN_AUTHTYPE = ""; 
-	public final static String DEFAULT_CRICKET_APN_TYPE = ""; 
 	/** Default Settings **/
 
 	/** Network Interfaces **/
@@ -109,7 +67,7 @@ public class Configuration extends PreferenceActivity
 	public static String ACTION_DEACTIVATE_ALL = "DectivateAll";
 	public static String ACTION_DEACTIVATE_PROXY = "DectivateProxy";
 	public static String ACTION_DEACTIVATE_U2NL = "DeactivateU2NL";
-	public static String ACTION_SETUP_APN = "SetupApn";
+	public static String ACTION_SETUP_CARRIER_APN = "SetupApn";
 	
 	/** Preference Screen Constants **/
 	public final static String PROXY_STATUS = "proxy_status";
@@ -120,11 +78,13 @@ public class Configuration extends PreferenceActivity
 	
 	public final static String TOGGLE_ACTIVATE = "toggle_activate";
 	public final static String TOGGLE_DEACTIVATE = "toggle_deactivate";
+	public final static String TOGGLE_CARRIER_APN = "toggle_carrier_apn";
 	/** Preference Screen Constants **/
 	
 	/** Preferences Constants **/
 	public final static String CARRIER_METROPCS = "metropcs";
 	public final static String CARRIER_CRICKET = "cricket";
+	public final static String CARRIER_CUSTOM = "custom";
 	
 	public final static String PREF_CARRIER_SELECTION = "prefs_carrier_selection";
 	public final static String PREF_CARRIER_SELECTION_DEFAULT = CARRIER_METROPCS;
@@ -135,50 +95,35 @@ public class Configuration extends PreferenceActivity
 	public final static String PREF_USE_U2NL = "prefs_use_u2nl";
 	public final static Boolean PREF_USE_U2NL_DEFAULT = true;
 	
-	public final static String PREF_USE_CUSTOM_PROXY = "prefs_use_custom_proxy";
-	public final static Boolean PREF_USE_CUSTOM_PROXY_DEFAULT = false;
-	
 	public final static String PREF_PROXY = "prefs_custom_proxy";
-	public final static String PREF_PROXY_DEFAULT = DEFAULT_METRO_PROXY;
 	
 	public final static String PREF_PROXY_PORT = "prefs_custom_proxy_port";
-	public final static String PREF_PROXY_PORT_DEFAULT = DEFAULT_METRO_PROXY_PORT;
 	
 	public final static String PREF_USE_MMS_U2NL = "prefs_use_mms_u2nl";
 	public final static Boolean PREF_USE_MMS_U2NL_DEFAULT = true;
 	
-	public final static String PREF_USE_CUSTOM_MMS = "prefs_use_custom_mms";
-	public final static Boolean PREF_USE_CUSTOM_MMS_DEFAULT = false;
-	
 	public final static String PREF_MMS = "prefs_custom_mms";
-	public final static String PREF_MMS_DEFAULT = DEFAULT_METRO_MMS;
 	
 	public final static String PREF_MMS_PORT = "prefs_custom_mms_port";
-	public final static String PREF_MMS_PORT_DEFAULT = DEFAULT_METRO_MMS_PORT;
 	/** Preferences Constants **/
 	
+	private PreferenceScreen 
+		proxy_status,
+		toggle_activate,
+		toggle_deactivate,
+		toggle_carrier_apn,
+		prefs_custom_settings,
+		install_binaries;
 	
-	private PreferenceScreen proxy_status;
-	private PreferenceScreen toggle_activate;
-	private PreferenceScreen toggle_deactivate;
-	
-	private CheckBoxPreference prefs_autoswitch_enabled;
 	private ListPreference prefs_carrier_selection;
 	
+	private CheckBoxPreference prefs_autoswitch_enabled;
 	private CheckBoxPreference prefs_use_u2nl;
- 
-	private PreferenceScreen prefs_custom_settings;
-	
-	private CheckBoxPreference prefs_use_custom_proxy;
+
 	private EditTextPreference prefs_custom_proxy;
 	private EditTextPreference prefs_custom_proxy_port;
-	
-	private CheckBoxPreference prefs_use_custom_mms;
 	private EditTextPreference prefs_custom_mms;
 	private EditTextPreference prefs_custom_mms_port;
-	private CheckBoxPreference prefs_use_carrier_apn;
-	
-	private MeidHelper meidHelper;
 	
 	@Override
     public void onCreate(Bundle savedInstanceState) 
@@ -192,7 +137,8 @@ public class Configuration extends PreferenceActivity
         
         toggle_activate = (PreferenceScreen)findPreference("toggle_activate");
         toggle_deactivate = (PreferenceScreen)findPreference("toggle_deactivate");
-        
+        toggle_carrier_apn = (PreferenceScreen)findPreference("toggle_carrier_apn");
+        install_binaries = (PreferenceScreen)findPreference("install_binaries");
         prefs_autoswitch_enabled = (CheckBoxPreference)findPreference("prefs_autoswitch_enabled");
         
         prefs_carrier_selection = (ListPreference)findPreference("prefs_carrier_selection");
@@ -201,26 +147,21 @@ public class Configuration extends PreferenceActivity
         
         prefs_custom_settings = (PreferenceScreen)findPreference("prefs_custom_settings");
         
-        
-        prefs_use_custom_proxy = (CheckBoxPreference)findPreference("prefs_use_custom_proxy");
+
         prefs_custom_proxy = (EditTextPreference)findPreference("prefs_custom_proxy");
         prefs_custom_proxy_port = (EditTextPreference)findPreference("prefs_custom_proxy_port");
-        prefs_use_carrier_apn = (CheckBoxPreference)findPreference("prefs_use_carrier_apn");
-        
-        prefs_use_custom_proxy.setOnPreferenceChangeListener(customProxyCheckboxListener);
+
         prefs_custom_proxy.setOnPreferenceChangeListener(customProxyEditTextListener);
         prefs_custom_proxy_port.setOnPreferenceChangeListener(customProxyPortEditTextListener);
         
-        prefs_use_custom_mms = (CheckBoxPreference)findPreference("prefs_use_custom_mms");
+       
         prefs_custom_mms = (EditTextPreference)findPreference("prefs_custom_mms");
         prefs_custom_mms_port = (EditTextPreference)findPreference("prefs_custom_mms_port");
         
-        prefs_use_custom_mms.setOnPreferenceChangeListener(customMMSCheckboxListener);
         prefs_custom_mms.setOnPreferenceChangeListener(customMMSEditTextListener);
         prefs_custom_mms_port.setOnPreferenceChangeListener(customMMSPortEditTextListener);
-        prefs_use_carrier_apn.setOnPreferenceChangeListener(customAPNCheckboxListener);
         
-       
+        prefs_carrier_selection.setOnPreferenceChangeListener(setCarrierSelection);
     }
     
     private BroadcastReceiver mProxyChangeActionReceiver = new BroadcastReceiver()
@@ -240,13 +181,13 @@ public class Configuration extends PreferenceActivity
 	{
 		super.onResume();
 		
-		updateCustomProxySummary(prefs_use_custom_proxy.isChecked(), null, null);
-		updateCustomMMSSummary(prefs_use_custom_mms.isChecked(), null, null);
+		updateCustomProxySummary(prefs_carrier_selection.getValue().toString().equals(CARRIER_CUSTOM), null, null);
+		updateCustomMMSSummary(prefs_carrier_selection.getValue().toString().equals(CARRIER_CUSTOM), null, null);
+		updateCarrierSelectionSummary(prefs_carrier_selection.getValue());
 		
 		new checkStatus().execute();
 		
-		this.registerReceiver(this.mProxyChangeActionReceiver, 
-					new IntentFilter(Proxy.PROXY_CHANGE_ACTION));
+		this.registerReceiver(this.mProxyChangeActionReceiver, new IntentFilter(Proxy.PROXY_CHANGE_ACTION));
 	}
     
     /*
@@ -259,27 +200,19 @@ public class Configuration extends PreferenceActivity
 		
 		this.unregisterReceiver(this.mProxyChangeActionReceiver);
 		
-		if (prefs_use_custom_proxy.isChecked())
+		if (prefs_carrier_selection.getValue().toString().equals(CARRIER_CUSTOM))
 		{
 			if (!testCustomProxy(null, null))
 			{
-				prefs_use_custom_proxy.setChecked(false);
-				prefs_custom_proxy.setText("");
-				prefs_custom_proxy_port.setText("");
-				
 				Log.d(TAG, "Invalid ip address and/or port number. Cannot use custom proxy.");
 				Toast.makeText(this, getString(R.string.prefs_use_custom_proxy_error), Toast.LENGTH_LONG).show();
 			}
 		}
 		
-		if (prefs_use_custom_mms.isChecked())
+		if (prefs_carrier_selection.getValue().toString().equals(CARRIER_CUSTOM))
 		{
 			if (!testCustomMMSServer(null, null))
 			{
-				prefs_use_custom_mms.setChecked(false);
-				prefs_custom_mms.setText("");
-				prefs_custom_mms_port.setText("");
-				
 				Log.d(TAG, "Invalid ip address and/or port number. Cannot use custom MMS server.");
 				Toast.makeText(this, getString(R.string.prefs_use_custom_mms_error), Toast.LENGTH_LONG).show();
 			}
@@ -312,6 +245,12 @@ public class Configuration extends PreferenceActivity
 	   		 Intent installer = new Intent(this, InstallBinaries.class);
 	         startActivityForResult(installer, 0);
     	}
+    	else if (TOGGLE_CARRIER_APN.equals(key))
+    	{
+    		Intent sIntent = new Intent(this, Toggler.class);
+    		sIntent.setAction(ACTION_SETUP_CARRIER_APN);
+    		sendBroadcast(sIntent);
+    	}
     	else if (PREF_CREDITS.equals(key))
     	{
     		showCredits();
@@ -328,11 +267,12 @@ public class Configuration extends PreferenceActivity
     {
     	toggle_activate.setEnabled(false);
     	toggle_deactivate.setEnabled(false);
-    	
+    	toggle_carrier_apn.setEnabled(false);
     	prefs_autoswitch_enabled.setEnabled(false);
     	prefs_carrier_selection.setEnabled(false);
     	prefs_use_u2nl.setEnabled(false);
     	prefs_custom_settings.setEnabled(false);
+    	install_binaries.setEnabled(false);
     }
     
     /*
@@ -342,11 +282,12 @@ public class Configuration extends PreferenceActivity
     {
     	toggle_activate.setEnabled(true);
     	toggle_deactivate.setEnabled(true);
-
+    	toggle_carrier_apn.setEnabled(true);
     	prefs_autoswitch_enabled.setEnabled(true);
     	prefs_carrier_selection.setEnabled(true);
     	prefs_use_u2nl.setEnabled(true);
-    	prefs_custom_settings.setEnabled(true);
+    	install_binaries.setEnabled(true);
+    	prefs_custom_settings.setEnabled(prefs_carrier_selection.getValue().toString().equals(CARRIER_CUSTOM));
     }
     
     /*
@@ -358,6 +299,7 @@ public class Configuration extends PreferenceActivity
 	{
     	String proxyStatus = getString(R.string.status_inactive);
     	String u2nlStatus = getString(R.string.status_inactive);
+    	String apnStatus = getString(R.string.status_inactive);
     	
     	protected void onPreExecute()
     	{
@@ -383,16 +325,18 @@ public class Configuration extends PreferenceActivity
     		if (isU2NLActive())
     			u2nlStatus = getString(R.string.status_active);
     		
+    		if(isAPNActive())
+    			apnStatus  = getString(R.string.status_active);
+    		
 			return true;
 		}
     	
     	protected void onPostExecute(Boolean state)
     	{
     		setProgressBarIndeterminateVisibility(false);
-    		proxy_status.setSummary(String.format(
-    				getString(R.string.proxy_status_sry), 
-    				proxyStatus, 
-    				u2nlStatus));
+    		proxy_status.setSummary(String.format(getString(R.string.proxy_status_sry), proxyStatus, u2nlStatus, apnStatus));
+    		toggle_carrier_apn.setSummary((apnStatus.equals(getString(R.string.status_active)) ? R.string.toggle_carrier_apn_active_sry : R.string.toggle_carrier_apn_inactive_sry));
+    		toggle_carrier_apn.setTitle((apnStatus.equals(getString(R.string.status_active)) ? R.string.toggle_carrier_apn_active : R.string.toggle_carrier_apn_inactive));
     		
     		enableToggles();
     	}
@@ -426,29 +370,20 @@ public class Configuration extends PreferenceActivity
     {
     	Boolean state = false;
 		if(ShellInterface.isSuAvailable()){
-			if(ShellInterface.getProcessOutput("ps | grep u2nl").length() > 0){
+			if(ShellInterface.getProcessOutput("ps | busybox grep u2nl").length() > 0){
 				state =  true;
 			}
 		}
     	return state;
     }
-    
-	/*
-	 * Update the Preference summary with the used APN Settings
-	 */
-    private void updateCustomAPNSummary(Object value, String carrier){
-    	if (value.equals(true)){
-    		backupAndInstallAPN();
-    	} else {
-    		restoreAndUninstallAPN();
-    	}
-    }
+
     
 	/*
 	 * Update the Preference summary with the used Proxy server/port
 	 */
 	private void updateCustomProxySummary(Object value, String proxy, String port)
 	{
+		
 		String customProxy;
 		String customPort;
 		
@@ -482,12 +417,8 @@ public class Configuration extends PreferenceActivity
 			}
 	
 		} else {
-			prefs_custom_proxy.setSummary(String.format(
-					getString(R.string.prefs_custom_proxy_sryOff), 
-					DEFAULT_METRO_PROXY));
-			prefs_custom_proxy_port.setSummary(String.format(
-					getString(R.string.prefs_custom_proxy_port_sryOff), 
-					DEFAULT_METRO_PROXY_PORT));
+			prefs_custom_proxy.setSummary(String.format(getString(R.string.prefs_custom_proxy_sryOff), ""));
+			prefs_custom_proxy_port.setSummary(String.format(getString(R.string.prefs_custom_proxy_port_sryOff), ""));
 		}
 	}
 	
@@ -536,6 +467,13 @@ public class Configuration extends PreferenceActivity
 	}
 	
 	/*
+	 * Update Carrier Selection Summary
+	 */
+	private void updateCarrierSelectionSummary(Object value){
+		prefs_custom_settings.setEnabled(value.toString().equals(CARRIER_CUSTOM));
+	}
+	
+	/*
 	 * Update the Preference summary with the used MMS server/port
 	 */
 	private void updateCustomMMSSummary(Object value, String server, String port)
@@ -573,12 +511,8 @@ public class Configuration extends PreferenceActivity
 			}
 	
 		} else {
-			prefs_custom_mms.setSummary(String.format(
-					getString(R.string.prefs_custom_mms_sryOff), 
-					DEFAULT_METRO_MMS));
-			prefs_custom_mms_port.setSummary(String.format(
-					getString(R.string.prefs_custom_mms_port_sryOff), 
-					DEFAULT_METRO_MMS_PORT));
+			prefs_custom_mms.setSummary(String.format(getString(R.string.prefs_custom_mms_sryOff), ""));
+			prefs_custom_mms_port.setSummary(String.format(getString(R.string.prefs_custom_mms_port_sryOff), ""));
 		}
 	}
 	
@@ -629,16 +563,7 @@ public class Configuration extends PreferenceActivity
 		return validProxy;
 	}
 	
-	private Preference.OnPreferenceChangeListener 
-		customProxyCheckboxListener = new Preference.OnPreferenceChangeListener() 
-	{
-		public boolean onPreferenceChange(Preference preference, Object newValue) 
-		{
-			updateCustomProxySummary(newValue, null, null);
-			
-			return true;
-		}
-	};
+
 	
 	private Preference.OnPreferenceChangeListener 
 		customProxyEditTextListener = new Preference.OnPreferenceChangeListener() 
@@ -661,17 +586,7 @@ public class Configuration extends PreferenceActivity
 			return true;
 		}
 	};
-	
-    private Preference.OnPreferenceChangeListener 
-		customMMSCheckboxListener = new Preference.OnPreferenceChangeListener() 
-	{
-		public boolean onPreferenceChange(Preference preference, Object newValue) 
-		{
-			updateCustomMMSSummary(newValue, null, null);
-			
-			return true;
-		}
-	};
+
 	
 	private Preference.OnPreferenceChangeListener 
 		customMMSEditTextListener = new Preference.OnPreferenceChangeListener() 
@@ -695,16 +610,21 @@ public class Configuration extends PreferenceActivity
 		}
 	};
 	
+    
+    /* 
+     * Set the Selected Carrier on Change
+     */
     private Preference.OnPreferenceChangeListener 
-    	customAPNCheckboxListener = new Preference.OnPreferenceChangeListener() 
-    {
+    setCarrierSelection = new Preference.OnPreferenceChangeListener() 
+	{
 		public boolean onPreferenceChange(Preference preference, Object newValue) 
 		{
-			updateCustomAPNSummary(newValue, null);
-			
+
+			updateCarrierSelectionSummary(newValue);
 			return true;
 		}
-    };
+	};
+    
     
 	/*
 	 * Method that helps validate IP addresses.
@@ -748,104 +668,20 @@ public class Configuration extends PreferenceActivity
     	alertDialog.show();
     }
     
-    protected void backupAndInstallAPN(){
-    	Log.d(TAG, "Backing up and Installing APN");   
-
-        if(ShellInterface.isSuAvailable()){
-        	
-        	
-
-        	if(prefs_carrier_selection.getValue().equals("metropcs")){
-        		// Get Device Serial and Find SPC for Password
-        		try{
-            		String deviceSerial = getDeviceSerial();
-            		if(deviceSerial == null){
-            			Toast.makeText(getApplicationContext(), "Device Not CDMA", Toast.LENGTH_LONG);
-            			return;
-            		}
-            		meidHelper = new MeidHelper(deviceSerial);
-            	}catch(Exception e){
-            		Log.e(TAG, "Error Getting Device Serial");
-            	}
-            	
-            	 // HTC Eris
-        		if(android.os.Build.DEVICE.equals("desirec")){
-        			Log.d(TAG, ShellInterface.getProcessOutput(
-        				"sqlite3 /data/data/com.android.providers.telephony/databases/telephony.db " + "\"UPDATE carriers SET numeric='310012',mnc='012',mcc='310';\"\n"+
-        				"sqlite3 /data/data/com.android.providers.telephony/databases/telephony.db " + "\"UPDATE carriers SET name='metropcs'," +
-        					"user = '"+getDeviceMDN()+"@mymetropcs.com"+"'," +
-        					"server = '"+DEFAULT_METRO_APN_SERVER+"'," +
-        					"password = '"+meidHelper.getMetroSpc()+"'," +
-        					"proxy = 'wap.metropcs.net'," +
-        					"port = '"+DEFAULT_METRO_APN_PORT+"'," +
-        					"mmsproxy = '"+DEFAULT_METRO_APN_MMSPROXY+"'," +
-        					"mmsport = '"+DEFAULT_METRO_APN_MMSPORT+"'," +
-        					"mmsc = '"+DEFAULT_METRO_APN_MMSC+"', " +
-        					"apn = 'internet'"+
-        					"WHERE name = 'Production';\""
-        			));
-        		
-        		// ALL OTHERS
-        		} else { 
-                	Log.d(TAG, ShellInterface.getProcessOutput(
-                    		"cp /data/data/com.android.providers.telephony/databases/telephony.db /data/data/com.android.providers.telephony/databases/telephony.db.bak \n"+
-                    		"sqlite3 /data/data/com.android.providers.telephony/databases/telephony.db " + "\"DELETE FROM carriers;\"" + "\n"+
-                    		"sqlite3 /data/data/com.android.providers.telephony/databases/telephony.db " + "\"INSERT INTO carriers (_id,name,numeric,mcc,mnc,apn,user,server,password,proxy,port,mmsproxy,mmsport,mmsc,authtype,type,current)VALUES(1," +
-                    		  "'"+DEFAULT_METRO_APN_NAME+"',"+
-                    		  "'"+DEFAULT_METRO_APN_NUMERIC+"',"+
-                    		  "'"+DEFAULT_METRO_APN_MCC+"',"+
-                    		  "'"+DEFAULT_METRO_APN_MNC+"',"+
-                    		  "'"+DEFAULT_METRO_APN_APN+"',"+
-                    		  "'"+getDeviceMDN()+"@mymetropcs.com"+"',"+
-                    		  "'"+DEFAULT_METRO_APN_SERVER+"',"+
-                    		  "'"+meidHelper.getMetroSpc()+"',"+
-                    		  "'"+DEFAULT_METRO_APN_PROXY+"',"+
-                    		  "'"+DEFAULT_METRO_APN_PORT+"',"+
-                    		  "'"+DEFAULT_METRO_APN_MMSPROXY+"',"+
-                    		  "'"+DEFAULT_METRO_APN_MMSPORT+"',"+
-                    		  "'"+DEFAULT_METRO_APN_MMSC+"',"+
-                    		  "'"+DEFAULT_METRO_APN_AUTHTYPE+"',"+
-                    		  "'"+DEFAULT_METRO_APN_TYPE+"',"+
-                    		  "'1'"+
-                    		");\"\n"+
-                    		"chmod 777 /data/data/com.android.providers.telephony/databases/telephony.db"
-                    	));
-        		}
-
-        	} else if(prefs_carrier_selection.getValue().equals("cricket")){
-        		
-        	}
-
-        }
-    }
-    /* 
-     * Restore the Previous APNs and Remove the Selected Carrier APN
-     */
-    protected void restoreAndUninstallAPN(){
-    	Log.d(TAG, "Backing up and Installing APN");    	
-        if(ShellInterface.isSuAvailable()){
-        	Log.d(TAG, ShellInterface.getProcessOutput(
-        		"mv /data/data/com.android.providers.telephony/databases/telephony.db.bak /data/data/com.android.providers.telephony/databases/telephony.db"+
-        		"chmod 777 /data/data/com.android.providers.telephony/databases/telephony.db"
-        	));
-        }
-    }
-    /*
-     * Get the Device Serial Number
-     */
-    private String getDeviceSerial(){
-    	TelephonyManager telephone = (TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE);
-    	if( telephone.getNetworkType() == telephone.PHONE_TYPE_GSM){ // exit for GSM 
-    		Log.e(TAG, "Phone is not CDMA");
-    		return null;
-    	}
-    	return telephone.getDeviceId();
-    }
-    /*
-     * Get the Device Serial MDN
-     */
-    private String getDeviceMDN(){
-    	TelephonyManager telephone = (TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE);
-    	return telephone.getLine1Number();
-    }
+	/*
+	 * Check the APN Status
+	 */
+	private boolean isAPNActive()
+	{
+		if(ShellInterface.isSuAvailable()){
+			if(ShellInterface.getProcessOutput("ls /data/data/com.android.providers.telephony/databases/ | busybox grep telephony.db.bak").length() > 0 ){
+				return true;
+			}
+		}
+		return false;
+	}
 }
+
+
+
+
