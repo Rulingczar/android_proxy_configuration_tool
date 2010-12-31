@@ -30,7 +30,7 @@ public class InstallBinaries extends PreferenceActivity{
 		
 	private String systemMount;
 	
-	private PreferenceScreen install_u2nl,install_sqlite3,install_iptables;
+	private PreferenceScreen install_u2nl,install_sqlite3;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) 
@@ -42,7 +42,6 @@ public class InstallBinaries extends PreferenceActivity{
         
         install_u2nl = (PreferenceScreen)findPreference("install_u2nl");
         install_sqlite3 = (PreferenceScreen)findPreference("install_sqlite3");
-        install_iptables = (PreferenceScreen)findPreference("install_iptables");
         
         systemMount = findSystemMount();
                 

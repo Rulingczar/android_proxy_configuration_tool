@@ -125,5 +125,6 @@
     
     
     	<string name="db_apn_error">No APN Configuration Found</string>
-    	<string name="db_connection_error"></string>
+    	<string name="db_carrier_error">Could Not Load Carrier Configuration</string>
+    	<string name="db_connection_error">Could Not Establish a Database Connection</string>
 </resources>

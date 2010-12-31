@@ -119,11 +119,14 @@ public class Configuration extends PreferenceActivity
 	
 	private CheckBoxPreference prefs_autoswitch_enabled;
 	private CheckBoxPreference prefs_use_u2nl;
-
+	private CheckBoxPreference prefs_use_mms_u2nl;
+	
 	private EditTextPreference prefs_custom_proxy;
 	private EditTextPreference prefs_custom_proxy_port;
 	private EditTextPreference prefs_custom_mms;
 	private EditTextPreference prefs_custom_mms_port;
+	
+	public SqlHelper DB = null;
 	
 	@Override
     public void onCreate(Bundle savedInstanceState) 
@@ -145,15 +148,16 @@ public class Configuration extends PreferenceActivity
         
         prefs_use_u2nl = (CheckBoxPreference)findPreference("prefs_use_u2nl");
         
-        prefs_custom_settings = (PreferenceScreen)findPreference("prefs_custom_settings");
+        prefs_use_mms_u2nl = (CheckBoxPreference)findPreference("prefs_use_mms_u2nl");
         
+        
+        prefs_custom_settings = (PreferenceScreen)findPreference("prefs_custom_settings");
 
         prefs_custom_proxy = (EditTextPreference)findPreference("prefs_custom_proxy");
         prefs_custom_proxy_port = (EditTextPreference)findPreference("prefs_custom_proxy_port");
 
         prefs_custom_proxy.setOnPreferenceChangeListener(customProxyEditTextListener);
         prefs_custom_proxy_port.setOnPreferenceChangeListener(customProxyPortEditTextListener);
-        
        
         prefs_custom_mms = (EditTextPreference)findPreference("prefs_custom_mms");
         prefs_custom_mms_port = (EditTextPreference)findPreference("prefs_custom_mms_port");
@@ -162,6 +166,7 @@ public class Configuration extends PreferenceActivity
         prefs_custom_mms_port.setOnPreferenceChangeListener(customMMSPortEditTextListener);
         
         prefs_carrier_selection.setOnPreferenceChangeListener(setCarrierSelection);
+        
     }
     
     private BroadcastReceiver mProxyChangeActionReceiver = new BroadcastReceiver()
@@ -219,6 +224,7 @@ public class Configuration extends PreferenceActivity
 		}
 	}
     
+    
     /*
      * This checks if a PreferenceScreen has been clicked on and acts accordingly.
      */
@@ -273,6 +279,7 @@ public class Configuration extends PreferenceActivity
     	prefs_use_u2nl.setEnabled(false);
     	prefs_custom_settings.setEnabled(false);
     	install_binaries.setEnabled(false);
+    	prefs_use_mms_u2nl.setEnabled(false);
     }
     
     /*
@@ -287,6 +294,7 @@ public class Configuration extends PreferenceActivity
     	prefs_carrier_selection.setEnabled(true);
     	prefs_use_u2nl.setEnabled(true);
     	install_binaries.setEnabled(true);
+    	prefs_use_mms_u2nl.setEnabled(true);
     	prefs_custom_settings.setEnabled(prefs_carrier_selection.getValue().toString().equals(CARRIER_CUSTOM));
     }
     
@@ -349,8 +357,7 @@ public class Configuration extends PreferenceActivity
     {
     	Boolean state = false;
     	
-    	String currentProxy = Settings.Secure.
-    			getString(getContentResolver(), Settings.Secure.HTTP_PROXY);
+    	String currentProxy = Settings.Secure.getString(getContentResolver(), Settings.Secure.HTTP_PROXY);
 
     	Log.d(TAG, "currentProxy: " + currentProxy);
 
@@ -680,6 +687,7 @@ public class Configuration extends PreferenceActivity
 		}
 		return false;
 	}
+	
 }
 
 

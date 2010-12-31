@@ -34,12 +34,10 @@ public class Toggler extends BroadcastReceiver
 	private SharedPreferences preferences;
 	
 	private String mCarrier;
-	
 
 	private Boolean mUseMMSU2NL;
 	private Boolean mUseU2NL;
 	
-	private String mHostname;
 	private String mProxy;
 	private String mPort;
 	
@@ -47,16 +45,19 @@ public class Toggler extends BroadcastReceiver
 	private String mMMSPort;
 
 	private String mInterface;
-	private SqlHelper DB;
+	private SqlHelper DB = null;
 	private int sdkVersion;
 	
 	private MeidHelper meidHelper;
 	
+
 	@Override
 	public void onReceive(Context context, Intent intent) 
 	{
 		this.context = context;
+		
 		preferences = PreferenceManager.getDefaultSharedPreferences(context);
+	
 		
 		loadPreferences();
 		
@@ -70,9 +71,9 @@ public class Toggler extends BroadcastReceiver
 			
 			try 
 			{
-				if( ! mUseU2NL ){ // only if we done use u2nl
+				if( ! mUseU2NL ) // only if we dont use u2nl
 					enableProxy();
-				}
+				
 				enableU2NL();
 			} catch (Exception e) {
 				Log.e(Configuration.TAG, "", e);
@@ -175,12 +176,14 @@ public class Toggler extends BroadcastReceiver
 		try{
 			DB = new SqlHelper(context); 
 		}catch(Exception e){
-			Log.e(Configuration.TAG,"Could Not Establish a Database Connection");
+			Log.e(Configuration.TAG,context.getString(R.string.db_connection_error));
+			Toast.makeText(context, context.getString(R.string.db_connection_error), Toast.LENGTH_LONG);
 			e.printStackTrace();
 		}
 		
 		Cursor carrierConfig =  DB.getCarrierConfig(mCarrier);
-
+		
+		
 		if(carrierConfig.getCount() > 0){
 			carrierConfig.moveToFirst();
 			mProxy = carrierConfig.getString(carrierConfig.getColumnIndex("proxy"));
@@ -188,7 +191,11 @@ public class Toggler extends BroadcastReceiver
 			mMMS = carrierConfig.getString(carrierConfig.getColumnIndex("mms_proxy"));
 			mMMSPort = carrierConfig.getString(carrierConfig.getColumnIndex("mms_proxy_port"));
 		} else {
-			Log.e(Configuration.TAG,"Could Not Load Carrier Configuration");
+			Log.e(Configuration.TAG,context.getString(R.string.db_carrier_error));
+			Toast.makeText(context, context.getString(R.string.db_carrier_error), Toast.LENGTH_LONG);
+			carrierConfig.close();
+			DB.close();
+			return;
 		}
         
 		if (android.os.Build.DEVICE.equals("sholes"))
@@ -212,6 +219,7 @@ public class Toggler extends BroadcastReceiver
 		
 		Log.d(Configuration.TAG, "Interface for " + android.os.Build.DEVICE + ": " + mInterface);
 		carrierConfig.close();
+		DB.close();
 	}
 	
 	/*
@@ -223,8 +231,10 @@ public class Toggler extends BroadcastReceiver
 		if( !mUseU2NL && ShellInterface.isSuAvailable()){
 			Log.d(Configuration.TAG, "Enabling proxy");
 			ShellInterface.runCommand(
-				"sqlite3 /data/data/com.android.providers.settings/databases/settings.db " + "\"INSERT OR IGNORE INTO secure (name, value) VALUES ('" + Settings.Secure.HTTP_PROXY + "', '" + mHostname + "');\"" + "\n"+
-				"sqlite3 /data/data/com.android.providers.settings/databases/settings.db " + "\"UPDATE secure SET value = '" + mHostname + "' WHERE name = '" + Settings.Secure.HTTP_PROXY + "';\""
+				"sqlite3 /data/data/com.android.providers.settings/databases/settings.db " + "\"INSERT OR IGNORE INTO secure (name, value) VALUES ('" + Settings.Secure.HTTP_PROXY + "', '" + mProxy + ":" + mPort + "');\" \n" +
+				"sqlite3 /data/data/com.android.providers.settings/databases/settings.db " + "\"INSERT OR IGNORE INTO secure (name, value) VALUES ('http_proxy_wifi_only', '0');\" \n" +
+				"sqlite3 /data/data/com.android.providers.settings/databases/settings.db " + "\"UPDATE secure SET value = '" + mProxy + ":" + mPort + "' WHERE name = '" + Settings.Secure.HTTP_PROXY + "';\" \n"+
+				"sqlite3 /data/data/com.android.providers.settings/databases/settings.db " + "\"UPDATE secure SET value = '0' WHERE name = 'http_proxy_wifi_only';\""
 			);
 			context.sendBroadcast(new Intent(Proxy.PROXY_CHANGE_ACTION));
 		}
@@ -238,7 +248,8 @@ public class Toggler extends BroadcastReceiver
 		Log.d(Configuration.TAG, "Disabling proxy");
 		if( ShellInterface.isSuAvailable()){
 			ShellInterface.runCommand(
-				"sqlite3 /data/data/com.android.providers.settings/databases/settings.db " +"\"UPDATE secure SET value = '' WHERE name = '" + Settings.Secure.HTTP_PROXY + "';\""
+				"sqlite3 /data/data/com.android.providers.settings/databases/settings.db " +"\"UPDATE secure SET value = '' WHERE name = '" + Settings.Secure.HTTP_PROXY + "';\" \n"+
+				"sqlite3 /data/data/com.android.providers.settings/databases/settings.db " +"\"UPDATE secure SET value = '' WHERE name = 'http_proxy_wifi_only';\""
 			);
 		}
 		context.sendBroadcast(new Intent(Proxy.PROXY_CHANGE_ACTION));
@@ -250,37 +261,24 @@ public class Toggler extends BroadcastReceiver
 	private void enableU2NL()
 	{
 		if (!mUseU2NL)
+
 			return;
 		
 		Log.d(Configuration.TAG, "Enabling U2NL");
-		
+		Log.d(Configuration.TAG, Boolean.toString(mUseMMSU2NL));
 		if(ShellInterface.isSuAvailable()){
-			if(android.os.Build.DEVICE.equals("desirec")){ // HTC ERIS
-				ShellInterface.runCommand(
-					"iptables -P INPUT ACCEPT \n"+
-					"iptables -P OUTPUT ACCEPT \n"+
-					"iptables -P FORWARD ACCEPT \n"+
-					"iptables -F \n"+
-					"iptables -t nat -F \n"+
-					"iptables -X \n"+
-					(mUseMMSU2NL ? ("iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 -d " + mMMS + " --dport " + mMMSPort + " -j DNAT --to-destination " + mMMS + ":" + mMMSPort) : "")+"\n"+
-					"iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 ! -d "+mProxy+" -j REDIRECT --to-port 1025 \n"+
-					"u2nl " + mProxy + " " + mPort + " 127.0.0.1 1025 >/dev/null 2>&1 &"
-					);
-			} else {
-				Log.d("t",ShellInterface.getProcessOutput(
-					"iptables -P INPUT ACCEPT \n"+
-					"iptables -P OUTPUT ACCEPT \n"+
-					"iptables -P FORWARD ACCEPT \n"+
-					"iptables -F \n"+
-					"iptables -t nat -F \n"+
-					"iptables -X \n"+
-					(mUseMMSU2NL ? ("iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 -d " + mMMS + " --dport " + mMMSPort + " -j DNAT --to-destination " + mMMS + ":" + mMMSPort) : "")+"\n"+
-					"iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 --dport 80 -j DNAT --to-destination " + mHostname + "\n"+
-					"iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 ! -d " + mProxy + " ! --dport " + mPort + " -j REDIRECT --to-port 1025\n"+
-					"u2nl " + mProxy + " " + mPort + " 127.0.0.1 1025 >/dev/null 2>&1 &"
-				));
-			}
+			Log.d(Configuration.TAG, ShellInterface.getProcessOutput(
+				"iptables -P INPUT ACCEPT \n"+
+				"iptables -P OUTPUT ACCEPT \n"+
+				"iptables -P FORWARD ACCEPT \n"+
+				"iptables -F \n"+
+				"iptables -t nat -F \n"+
+				"iptables -X \n"+
+				(mUseMMSU2NL ? ("iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 -d " + mMMS + " --dport " + mMMSPort + " -j DNAT --to-destination " + mMMS + ":" + mMMSPort) : "")+"\n"+
+				(android.os.Build.DEVICE.equals("desirec") /* ERIS */? "" : "iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 --dport 80 -j DNAT --to-destination " + mProxy + "\n")+
+				"iptables -t nat -A OUTPUT -o " + mInterface + " -p 6 ! -d " + mProxy + " ! --dport " + mPort + " -j REDIRECT --to-port 1025\n"+
+				"u2nl " + mProxy + " " + mPort + " 127.0.0.1 1025 >/dev/null 2>&1 &"
+			));
 		}
 		context.sendBroadcast(new Intent(Proxy.PROXY_CHANGE_ACTION));
 	}
@@ -330,8 +328,8 @@ public class Toggler extends BroadcastReceiver
 		if(ShellInterface.isSuAvailable()){
 			ShellInterface.runCommand(
 				"busybox cp /data/data/com.android.providers.telephony/databases/telephony.db /data/data/com.android.providers.telephony/databases/telephony.db.bak \n"+
-				"chown radio /data/data/com.android.providers.telephony/databases/telephony.db.bak \n"+
-				"chmod 0755 /data/data/com.android.providers.telephony/databases/telephony.db.bak"
+				"busybox chown radio /data/data/com.android.providers.telephony/databases/telephony.db.bak \n"+
+				"busybox chmod 0755 /data/data/com.android.providers.telephony/databases/telephony.db.bak"
     		);
 		}
 		
@@ -347,8 +345,8 @@ public class Toggler extends BroadcastReceiver
         		Log.d(Configuration.TAG, "Restoring Backed Up APN Settings");
     			ShellInterface.runCommand(
     				"busybox mv /data/data/com.android.providers.telephony/databases/telephony.db.bak /data/data/com.android.providers.telephony/databases/telephony.db \n"+
-    				"chown radio /data/data/com.android.providers.telephony/databases/telephony.db \n"+
-    				"chmod 0755 /data/data/com.android.providers.telephony/databases/telephony.db"
+    				"busybox chown radio /data/data/com.android.providers.telephony/databases/telephony.db \n"+
+    				"busybox chmod 0755 /data/data/com.android.providers.telephony/databases/telephony.db"
     	    	);
         	} else {
         		Log.d(Configuration.TAG, "No Backup Found");
@@ -359,8 +357,9 @@ public class Toggler extends BroadcastReceiver
 	
 	private void enableAPN(){
 		
+		// load Carrier APN Config from DB, 
 		Cursor apnConfig = DB.getCarrierAndDeviceApnConfig(mCarrier, android.os.Build.DEVICE);
-		if( apnConfig.getCount() == 0){
+		if( apnConfig.getCount() == 0){ //fallback with the default APN configuration
 			apnConfig = DB.getCarrierAndDeviceApnConfig(mCarrier, "default");
 		}
 		
@@ -416,8 +415,8 @@ public class Toggler extends BroadcastReceiver
 				
 				ShellInterface.runCommand(
 					"sqlite3 /data/data/com.android.providers.telephony/databases/telephony.db " + "\"INSERT INTO carriers (_id,"+cols+")VALUES(NULL,"+vals+");\"\n" +
-					"chown radio /data/data/com.android.providers.telephony/databases/telephony.db \n"+
-    				"chmod 0755 /data/data/com.android.providers.telephony/databases/telephony.db"					
+					"busybox chown radio /data/data/com.android.providers.telephony/databases/telephony.db \n"+
+    				"busybox chmod 0755 /data/data/com.android.providers.telephony/databases/telephony.db"					
 				);
 			
 			} while(apnConfig.moveToNext());
@@ -427,6 +426,7 @@ public class Toggler extends BroadcastReceiver
 			Log.e(Configuration.TAG,context.getString(R.string.db_apn_error));
 		}
 		apnConfig.close();
+		DB.close();
 		context.sendBroadcast(new Intent(Proxy.PROXY_CHANGE_ACTION));
 	}
 	
@@ -448,4 +448,5 @@ public class Toggler extends BroadcastReceiver
     	}
     	return telephone.getDeviceId();
     }
+    
 }

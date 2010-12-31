@@ -71,8 +71,7 @@ public class WifiReceiver extends BroadcastReceiver
 				if (intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE, 
 						WifiManager.WIFI_STATE_UNKNOWN) == WifiManager.WIFI_STATE_DISABLED)
 				{
-					Log.d(Configuration.TAG, 
-							"Wi-fi was disabled");
+					Log.d(Configuration.TAG, "Wi-fi was disabled");
 					
 					toggleActivate(context);
 				}
@@ -81,8 +80,7 @@ public class WifiReceiver extends BroadcastReceiver
 			{
 				if (!intent.getBooleanExtra(WifiManager.EXTRA_SUPPLICANT_CONNECTED, false))
 				{
-					Log.d(Configuration.TAG, 
-							"Wi-fi connection was dropped or disconnected");
+					Log.d(Configuration.TAG, "Wi-fi connection was dropped or disconnected");
 					
 					toggleActivate(context);
 				}
